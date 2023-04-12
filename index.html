@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- 1. The <iframe> (and video player) will replace this <div> tag. 
+        https://developers.google.com/youtube/iframe_api_reference?hl=fr
+    -->
+    <div id="player"></div>
+
+    <script>
+      // 2. This code loads the IFrame Player API code asynchronously.
+      var tag = document.createElement('script');
+
+      tag.src = "https://www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+      // 3. This function creates an <iframe> (and YouTube player)
+      //    after the API code downloads.
+      var player;
+      function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+          height: '360',
+          width: '640',
+          videoId: 'zpgq4oPDKug',
+          events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+          }
+        });
+      }
+
+      // 4. The API will call this function when the video player is ready.
+      function onPlayerReady(event) {
+        event.target.playVideo();
+        player.pauseVideo();
+
+      }
+
+      // 5. The API calls this function when the player's state changes.
+      //    The function indicates that when playing a video (state=1),
+      //    the player should play for six seconds and then stop.
+
+      function onPlayerStateChange(event) {
+        if (event.data == YT.PlayerState.PLAYING) {
+//          setTimeout(stopVideo, 7000);
+          console.log("La vidéo est en cours de lecture")
+          document.getElementsByClassName("Log")[0].innerHTML += "<br>L'utilisateur a repris la lecture";
+        } else if (event.data == YT.PlayerState.PAUSED) {
+          console.log("La vidéo est en pause")
+          document.getElementsByClassName("Log")[0].innerHTML += "<br>L'utilisateur a mis en pause";
+        } else if (event.data == YT.PlayerState.ENDED) {
+          console.log("La vidéo est terminée")
+          document.getElementsByClassName("Log")[0].innerHTML += "<br>La video est terminée";
+          //Autoplay next 
+          var next = document.getElementsByClassName("Next")[0].children;
+          if (next.length > 1) {
+            var nextVideo = next[1].innerHTML;
+            var urlNextVideo = nextVideo.match(/(?<=^\S+\s+\S+\s+\S+\s+\S+\s+\S+\s)[^\s]+/g);
+            next[1].remove();
+            player.loadVideoById(urlNextVideo[0]);
+          }
+
+
+        } else if (event.data == YT.PlayerState.BUFFERING) {
+          console.log("La vidéo est en cours de chargement")
+          document.getElementsByClassName("Log")[0].innerHTML += "<br>La vidéo a changée";
+        } else if (event.data == YT.PlayerState.CUED) {
+          document.getElementsByClassName("Log")[0].innerHTML += "<br>L'utilisateur a changé le moment de la vidéo  ";
+          console.log("La vidéo est en cours de chargement")
+        }
+      }
+      function stopVideo() {
+        player.stopVideo();
+        //player.loadVideoById("PzeAH_ubphk", 5, "large")
+   }
+    function pauseVideo(){ 
+      if (player.getPlayerState() == 1) {
+        player.pauseVideo();
+      } else {
+        player.playVideo();
+      }
+    }
+    nbVideos=1;
+    function rechercher(){
+      var requete = document.getElementById("requete").value;
+      //si la recherche est vide on ne fait rien
+      if (requete == "") {
+        return;
+      }
+      //si la requête contient une url youtube (https://www.youtube.com/watch?v=Dcjyz_lwVaw) la réduit pour récupérer juste l'id de la vidéo apres le watch?v=
+      requete = requete.replace("https://www.youtube.com/watch?v=", ""); //faire une regex pour remplacer tout ce qui est avant le watch?v=
+      requete = requete.replace("https://youtube.com/watch?v=", "");
+      requete = requete.replace("https://youtu.be/", "");
+      requete = requete.replace("https://www.youtu.be/", "");
+      requete = requete.replace(/&+.*/g, "");
+      console.log(requete);
+      nbVideos = nbVideos + 1;
+      document.getElementsByClassName("Next")[0].innerHTML += "<div id='"+nbVideos+"'>["+nbVideos+"] La prochaine vidéo sera: " + requete + " <button onclick=\"jumpVideo('"+requete+"','"+nbVideos+"')\" style='float: right;font-size: 11px;'>Jump</button></div> ";
+      //player.loadVideoById(requete)
+
+    }
+
+
+    function jumpVideo(requete,nbVideo){
+      //supprime l'élément nbVideo de la liste des vidéos à venir
+      document.getElementById(nbVideo).remove();
+      player.loadVideoById(requete)
+    }
+    </script>
+
+
+    <div class="Log">
+      <b>LOG:</b>
+    </div>
+ 
+    <div class="Next">
+      <b>A suivre:</b>
+      <div id='1'>[1] La prochaine vidéo sera: f7UAjlOr4xE <button onclick="jumpVideo('f7UAjlOr4xE',1)" style='float: right;font-size: 11px;'>Jump</button></div>
+    </div>
+
+      <div id="boutons">
+        <input type="text" id="requete" placeholder="Rechercher...">
+        <button onclick="rechercher()">Rechercher</button>
+        <button onclick="stopVideo()">Stop</button>
+        <button onclick="pauseVideo()">Pause</button> 
+      </div>
+
+  </body>
+</html>
